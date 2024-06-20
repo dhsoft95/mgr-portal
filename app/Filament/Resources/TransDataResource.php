@@ -26,7 +26,7 @@ use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class TransDataResource extends Resource
 {
-    protected static ?string $model = TransData::class;
+    protected static ?string $model = transData::class;
     protected static ?string $navigationLabel = 'All-Transacting';
     protected static ?string $navigationGroup = 'Transaction Metrics';
     protected static ?string $modelLabel = 'All Transaction Records ';
