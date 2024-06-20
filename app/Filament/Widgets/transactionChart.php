@@ -3,7 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\AppUser;
-use App\Models\TransData;
+use App\Models\transData;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
 
@@ -13,7 +13,7 @@ class transactionChart extends ChartWidget
 
     protected function getData(): array
     {
-        $trans=TransData::query('id','created_at')->get()->groupBy(function ($trans){
+        $trans=transData::query('id','created_at')->get()->groupBy(function ($trans){
             return Carbon::parse( $trans->created_at)->format('F');
         });
 //       dd($trans);
