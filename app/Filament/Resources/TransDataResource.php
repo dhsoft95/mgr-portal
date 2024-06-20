@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TransDataResource\Pages;
 use App\Filament\Resources\TransDataResource\RelationManagers;
-use App\Models\TransData;
+use App\Models\transData;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Grid;
