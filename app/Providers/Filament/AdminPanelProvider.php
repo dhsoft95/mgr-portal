@@ -65,7 +65,7 @@ class AdminPanelProvider extends PanelProvider
 //                Widgets\AccountWidget::class,
 //                Widgets\FilamentInfoWidget::class,
                 TransOverview::class,
-                GeoMapChart::class,
+//                GeoMapChart::class,
                 UsersOverview::class,
                 GrowthRateChart::class,
                 MostTransUserOverview::class,
