@@ -192,13 +192,14 @@ class TransDataResource extends Resource
                     ->schema([
                         TextEntry::make('trxId')->label('Transaction Id'),
                         TextEntry::make('status'),
-//                        TextEntry::make('status')
-//                            ->color(fn (string $state): string => match ($state) {
-//                                'processing' => 'warning',
-//                                'disbursed' => 'success',
-//                                'Collected' => 'info',
-//                                'failed' => 'danger',
-//                            })->label('Status'),
+                        TextEntry::make('status')
+                            ->color(fn (string $state): string => match ($state) {
+                                'processing' => 'warning',
+                                'disbursed' => 'success',
+                                'Collected' => 'info',
+                                'failed' => 'danger',
+                            })->label('Status'),
+
                         TextEntry::make('sender_amount')->numeric(),
                         TextEntry::make('sender_channel_id'),
                         TextEntry::make('sender_channel_currency'),
