@@ -20,7 +20,7 @@ class NotransResource extends Resource
     protected static ?string $model = Notrans::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    protected static ?string $navigationGroup = 'Transaction Metrics';
+    protected static ?string $navigationGroup = 'User Metrics';
     protected static ?string $navigationLabel = 'Non-Transacting Users';
 
     public static function getNavigationBadge(): ?string

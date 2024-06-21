@@ -2,11 +2,14 @@
 
 namespace App\Providers\Filament;
 use App\Filament\Widgets\CountriesChart;
+use App\Filament\Widgets\GeoChartWidget;
+use App\Filament\Widgets\GeoMapChart;
 use App\Filament\Widgets\GrowthRateChart;
 use App\Filament\Widgets\MostTransUserOverview;
 use App\Filament\Widgets\transactionChart;
 use App\Filament\Widgets\TransOverview;
 use App\Filament\Widgets\UserChart;
+use App\Filament\Widgets\GeoChart;
 use App\Filament\Widgets\UsersOverview;
 use App\Livewire\GeoChartCard;
 use Awcodes\LightSwitch\Enums\Alignment;
@@ -58,10 +61,12 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])->widgets([
+
 //                Widgets\AccountWidget::class,
 //                Widgets\FilamentInfoWidget::class,
-                UsersOverview::class,
                 TransOverview::class,
+                GeoMapChart::class,
+                UsersOverview::class,
                 GrowthRateChart::class,
                 MostTransUserOverview::class,
                 CountriesChart::class,

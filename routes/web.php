@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect('/admin');
 });
+Route::get('/test-chart', function () {
+    return view('test');
+});
 
 // Define routes for WhatsApp webhook and message sending
 //Route::get('/webhook', [WhatsAppController::class, 'webhook'])->name('whatsapp.webhook.get');

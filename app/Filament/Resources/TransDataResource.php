@@ -188,18 +188,6 @@ class TransDataResource extends Resource
     {
         return $infolist
             ->schema([
-                Fieldset::make('Users Info')
-                    ->schema([
-                        TextEntry::make('first_name'),
-                        TextEntry::make('last_name'),
-                        TextEntry::make('phone_number'),
-                        TextEntry::make('birth_date')->date(),
-                        TextEntry::make('gender'),
-                        TextEntry::make('otp_pin'),
-                        TextEntry::make('country'),
-                        TextEntry::make('created_at'),
-                    ])->columns(3),
-
                 Fieldset::make('Transaction Info')
                     ->schema([
                         TextEntry::make('trxId')->label('Transaction Id'),

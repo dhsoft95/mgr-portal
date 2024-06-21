@@ -36,11 +36,6 @@ class TransOverview extends BaseWidget
                 ->chart($this->generateChart())
                 ->color($processingCount > 0 ? 'info' : 'gray'),
 
-            Stat::make('Total Transactions Amount', $allTransactionSum)
-                ->descriptionIcon('heroicon-m-receipt-refund')
-                ->chart($this->generateChart())
-                ->color($allTransactionSum > 0 ? 'info' : 'gray'),
-
             Stat::make('Total Collected Amount', $collectedSum)
                 ->descriptionIcon('heroicon-m-receipt-refund')
                 ->chart($this->generateChart())
@@ -50,6 +45,21 @@ class TransOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-document-check')
                 ->chart($this->generateChart())
                 ->color($collectedCount > 0 ? 'warning' : 'gray'),
+            Stat::make('Total Disbursed Amount', $disbursedSum)
+                ->descriptionIcon('heroicon-m-document-check')
+                ->chart($this->generateChart())
+                ->color($disbursedSum > 0 ? 'success' : 'gray'),
+
+            Stat::make('Total Disbursed Transactions', $disbursedCount)
+                ->descriptionIcon('heroicon-m-document-check')
+                ->chart($this->generateChart())
+                ->color($disbursedCount > 0 ? 'success' : 'gray'),
+
+
+            Stat::make('Total Transactions Amount', $allTransactionSum)
+                ->descriptionIcon('heroicon-m-receipt-refund')
+                ->chart($this->generateChart())
+                ->color($allTransactionSum > 0 ? 'info' : 'gray'),
 
             Stat::make('Total Failed Amount', $failedSum)
                 ->descriptionIcon('heroicon-m-inbox-arrow-down')
@@ -61,15 +71,7 @@ class TransOverview extends BaseWidget
                 ->chart($this->generateChart())
                 ->color($failedCount > 0 ? 'danger' : 'gray'),
 
-            Stat::make('Total Disbursed Amount', $disbursedSum)
-                ->descriptionIcon('heroicon-m-document-check')
-                ->chart($this->generateChart())
-                ->color($disbursedSum > 0 ? 'success' : 'gray'),
 
-            Stat::make('Total Disbursed Transactions', $disbursedCount)
-                ->descriptionIcon('heroicon-m-document-check')
-                ->chart($this->generateChart())
-                ->color($disbursedCount > 0 ? 'success' : 'gray'),
 
 
         ];

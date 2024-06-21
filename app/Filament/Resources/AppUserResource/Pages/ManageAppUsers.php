@@ -3,8 +3,9 @@
 namespace App\Filament\Resources\AppUserResource\Pages;
 
 use App\Filament\Resources\AppUserResource;
+use App\Filament\Widgets\GeoMapChart;
 use App\Filament\Widgets\GrowthRateChart;
-use App\Filament\Widgets\TransOverview;
+//use App\Filament\Widgets\GeoChat;
 use App\Filament\Widgets\UsersOverview;
 use Filament\Actions;
 use   Hydrat\TableLayoutToggle\Concerns\HasToggleableTable;
@@ -18,8 +19,10 @@ class ManageAppUsers extends ManageRecords
         return[
             UsersOverview::class,
             GrowthRateChart::class,
+//            GeoChat::class,
         ];
     }
+
     protected function getHeaderActions(): array
     {
         return [
