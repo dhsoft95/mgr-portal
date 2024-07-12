@@ -65,6 +65,7 @@ class WhatsAppController extends Controller
                 $userMessage = $message['text']['body'];
                 $responseText = $this->getGeminiResponse($userMessage);
                 Whatsapp::send($recipientNumber, TextMessage::create($responseText));
+                $this->markMessageAsRead($message['id']);
             }
         }
     }
@@ -142,6 +143,43 @@ class WhatsAppController extends Controller
     protected function handleMessageReadStatus($recipientId, $messageId, $timestamp)
     {
         Log::info("Message ID $messageId read by $recipientId at $timestamp");
+        // Additional logic for handling the "Message Read" status can be added here
+        // For example, updating the database, sending notifications, etc.
+    }
 
+    protected function markMessageAsRead($messageId)
+    {
+        $phoneNumberId = env('WHATSAPP_PHONE_NUMBER_ID');
+        $accessToken = env('WHATSAPP_ACCESS_TOKEN');
+
+        $url = 'https://graph.facebook.com/v20.0/' . $phoneNumberId . '/messages';
+        $client = new Client();
+        $headers = [
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Content-Type' => 'application/json',
+        ];
+
+        $body = [
+            'messaging_product' => 'whatsapp',
+            'status' => 'read',
+            'message_id' => $messageId,
+        ];
+
+        try {
+            $response = $client->post($url, [
+                'headers' => $headers,
+                'json' => $body,
+            ]);
+
+            $responseData = json_decode($response->getBody(), true);
+
+            if (isset($responseData['success']) && $responseData['success']) {
+                Log::info('Message marked as read successfully: ' . $messageId);
+            } else {
+                Log::error('Failed to mark message as read: ' . $messageId);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error marking message as read: ' . $e->getMessage());
+        }
     }
 }
