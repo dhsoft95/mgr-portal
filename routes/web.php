@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\WhatsAppController;
+use App\Livewire\CreatePost;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,6 +20,8 @@ Route::get('/', function () {
 Route::get('/test-chart', function () {
     return view('test');
 });
+
+Route::get('posts/create', CreatePost::class);
 
 // Define routes for WhatsApp webhook and message sending
 //Route::get('/webhook', [WhatsAppController::class, 'webhook'])->name('whatsapp.webhook.get');

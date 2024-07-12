@@ -1,15 +1,18 @@
 <?php
 
 namespace App\Providers\Filament;
+use App\Filament\Widgets\BlogPostsChart;
 use App\Filament\Widgets\CountriesChart;
 use App\Filament\Widgets\GeoChartWidget;
 use App\Filament\Widgets\GeoMapChart;
 use App\Filament\Widgets\GrowthRateChart;
 use App\Filament\Widgets\MostTransUserOverview;
+use App\Filament\Widgets\MultipleProgressBar;
 use App\Filament\Widgets\transactionChart;
 use App\Filament\Widgets\TransOverview;
 use App\Filament\Widgets\UserChart;
 use App\Filament\Widgets\GeoChart;
+use App\Filament\Widgets\userinfoChart;
 use App\Filament\Widgets\UsersOverview;
 use App\Livewire\GeoChartCard;
 use Awcodes\LightSwitch\Enums\Alignment;
@@ -54,26 +57,28 @@ class AdminPanelProvider extends PanelProvider
              ->default()
             ->id('admin')
             ->path('admin')
-            ->login()->colors(['primary' => '#ffb400',])->sidebarCollapsibleOnDesktop()->databaseNotifications()
+            ->login()
+            ->colors([
+                'danger' => Color::Rose,
+                'gray' => Color::Gray,
+                'info' => Color::Blue,
+                'primary' => Color::Indigo,
+                'success' => Color::Emerald,
+                'warning' => Color::Orange,
+            ])
+            ->sidebarCollapsibleOnDesktop()->databaseNotifications()
             ->databaseNotificationsPolling('30s')->profile(EditProfile::class)->profile(isSimple: false)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])->widgets([
-
-//                Widgets\AccountWidget::class,
-//                Widgets\FilamentInfoWidget::class,
-                TransOverview::class,
-//                GeoMapChart::class,
                 UsersOverview::class,
-                GrowthRateChart::class,
+                BlogPostsChart::class,
+                transactionChart::class,
                 MostTransUserOverview::class,
                 CountriesChart::class,
-
                 UserChart::class,
-
-                transactionChart::class,
 
             ])->plugins([
                 FilamentApexChartsPlugin::make(),
@@ -89,7 +94,6 @@ class AdminPanelProvider extends PanelProvider
                     ->slug('logs')->viewLog(ViewLog::class),
                 LightSwitchPlugin::make()
                     ->position(Alignment::TopRight),
-//                MaintenanceSwitchPlugin::make(),
 
             ])
             ->middleware([
@@ -107,3 +111,4 @@ class AdminPanelProvider extends PanelProvider
             ]);
     }
 }
+

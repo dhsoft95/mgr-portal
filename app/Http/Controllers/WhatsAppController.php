@@ -13,44 +13,17 @@ class WhatsAppController extends Controller
     public function handleWebhook(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
-            // Extract and validate webhook data
             $webhookData = $request->all();
 
-            // Ensure payload is for a WhatsApp Business Account and contains changes
             if ($this->validateWebhook($webhookData)) {
                 foreach ($webhookData['entry'] as $entry) {
                     foreach ($entry['changes'] as $change) {
                         if ($change['field'] === 'messages') {
-                            // Check for and process message statuses
                             if (isset($change['value']['statuses'])) {
-                                $statuses = $change['value']['statuses'];
-                                foreach ($statuses as $status) {
-                                    if ($status['status'] === 'read') {
-                                        $recipientId = $status['recipient_id'];
-                                        $messageId = $status['id'];
-                                        $timestamp = $status['timestamp'];
-
-                                        // Handle the "Message Read" status
-                                        $this->handleMessageReadStatus($recipientId, $messageId, $timestamp);
-                                    }
-                                }
+                                $this->processMessageStatuses($change['value']['statuses']);
                             }
-
-                            // Check for and process received messages
                             if (isset($change['value']['messages'])) {
-                                $messages = $change['value']['messages'];
-                                foreach ($messages as $message) {
-                                    if ($message['type'] === 'text' && isset($message['text']['body'])) {
-                                        $recipientNumber = $message['from'];
-                                        $userMessage = $message['text']['body'];
-
-                                        // Generate response using Gemini API
-                                        $responseText = $this->getGeminiResponse($userMessage);
-
-                                        // Send the response back via WhatsApp
-                                        Whatsapp::send($recipientNumber, TextMessage::create($responseText));
-                                    }
-                                }
+                                $this->processReceivedMessages($change['value']['messages']);
                             }
                         }
                     }
@@ -58,12 +31,10 @@ class WhatsAppController extends Controller
 
                 return response()->json(['message' => 'Webhook processed successfully'], 200);
             } else {
-                // Log invalid webhook payload
                 Log::error('Invalid webhook payload');
                 return response()->json(['error' => 'Invalid webhook payload'], 400);
             }
         } catch (\Exception $e) {
-            // Log any exceptions
             Log::error('Error processing webhook: ' . $e->getMessage());
             return response()->json(['error' => 'An error occurred while processing the webhook'], 500);
         }
@@ -71,23 +42,41 @@ class WhatsAppController extends Controller
 
     protected function validateWebhook($webhookData)
     {
-        // Example validation: check for valid structure and required fields
-        if (!isset($webhookData['object']) || $webhookData['object'] !== 'whatsapp_business_account') {
-            return false;
+        return isset($webhookData['object']) &&
+            $webhookData['object'] === 'whatsapp_business_account' &&
+            isset($webhookData['entry']) &&
+            is_array($webhookData['entry']);
+    }
+
+    protected function processMessageStatuses($statuses)
+    {
+        foreach ($statuses as $status) {
+            if ($status['status'] === 'read') {
+                $this->handleMessageReadStatus($status['recipient_id'], $status['id'], $status['timestamp']);
+            }
         }
-        if (!isset($webhookData['entry']) || !is_array($webhookData['entry'])) {
-            return false;
+    }
+
+    protected function processReceivedMessages($messages)
+    {
+        foreach ($messages as $message) {
+            if ($message['type'] === 'text' && isset($message['text']['body'])) {
+                $recipientNumber = $message['from'];
+                $userMessage = $message['text']['body'];
+                $responseText = $this->getGeminiResponse($userMessage);
+                Whatsapp::send($recipientNumber, TextMessage::create($responseText));
+            }
         }
-        return true;
     }
 
     protected function getGeminiResponse($userMessage)
     {
-        // Retrieve the API key from the environment
         $geminiApiKey = env('GEMINI_API_KEY');
+        $geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=' . $geminiApiKey;
 
-        // Construct the URL with the API key
-        $geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $geminiApiKey;
+        $customPrompt = file_get_contents(storage_path('app/gemini_prompt.txt'));
+
+        $customPrompt .= "\n\nUser: " . $userMessage;
 
         try {
             $client = new Client();
@@ -100,9 +89,22 @@ class WhatsAppController extends Controller
                     [
                         "parts" => [
                             [
-                                "text" => $userMessage,
+                                "text" => $customPrompt,
                             ]
                         ]
+                    ]
+                ],
+                "generationConfig" => [
+                    "temperature" => 0.9,
+                    "topK" => 1,
+                    "topP" => 1,
+                    "maxOutputTokens" => 2048,
+                    "stopSequences" => []
+                ],
+                "safetySettings" => [
+                    [
+                        "category" => "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        "threshold" => "BLOCK_MEDIUM_AND_ABOVE"
                     ]
                 ]
             ];
@@ -115,39 +117,31 @@ class WhatsAppController extends Controller
             if ($response->getStatusCode() === 200) {
                 $responseData = json_decode($response->getBody(), true);
 
-                // Check if "candidates" exist and are not empty before accessing them
                 if (isset($responseData['candidates']) && !empty($responseData['candidates'])) {
-                    // Extract the first candidate's content
                     $generatedContent = $responseData['candidates'][0]['content']['parts'][0]['text'];
                     return $generatedContent;
                 } else {
                     Log::error('Error in Gemini response structure: Missing or empty "candidates" key');
-                    // Optionally return a default value or user-friendly message
-                    return 'There seems to be an issue with the Gemini service. Please try again later.';
+                    return 'There seems to be an issue with our service. Please try again later or contact our customer support team for assistance.';
                 }
             } else {
-                // Error handling for non-200 status code
                 $errorResponse = json_decode($response->getBody(), true);
-                $errorMessage = $errorResponse['error']['message'] ?? 'Unknown error'; // Get main error message
-                $errorCode = $errorResponse['error']['code'] ?? null; // Get error code (if available)
+                $errorMessage = $errorResponse['error']['message'] ?? 'Unknown error';
+                $errorCode = $errorResponse['error']['code'] ?? null;
 
                 Log::error('Error fetching response from Gemini: ' . $response->getStatusCode() . ' - ' . $errorMessage . ' (code: ' . $errorCode . ')');
 
-                // Optionally, you can return a user-friendly error message here
-                return 'There was an error processing your request. Please try again later.';
+                return 'I apologize, but I\'m having trouble processing your request right now. Please try again later or contact our customer support team for assistance.';
             }
         } catch (\Exception $e) {
             Log::error('Error fetching response from Gemini: ' . $e->getMessage());
-            return 'Error fetching response from Gemini';
+            return 'I\'m sorry, but I\'m experiencing technical difficulties. Please try again later or contact our customer support team for immediate assistance.';
         }
     }
 
     protected function handleMessageReadStatus($recipientId, $messageId, $timestamp)
     {
-        // Log the message read status
         Log::info("Message ID $messageId read by $recipientId at $timestamp");
 
-        // Additional logic for handling the "Message Read" status can be added here
-        // For example, updating the database, sending notifications, etc.
     }
 }

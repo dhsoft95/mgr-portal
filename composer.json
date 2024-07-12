@@ -18,6 +18,7 @@
         "chrisreedio/socialment": "^3.6",
         "edwink/filament-user-activity": "^1.0",
         "filament/filament": "^3.2",
+        "flowframe/laravel-trend": "^0.2.0",
         "guzzlehttp/guzzle": "^7.2",
         "hydrat/filament-table-layout-toggle": "^1.1",
         "jeffgreco13/filament-breezy": "^2.3",

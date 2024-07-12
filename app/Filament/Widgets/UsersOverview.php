@@ -25,37 +25,46 @@ class UsersOverview extends BaseWidget
         $otherCount = AppUser::where('gender', 'other')->count();
 
         return [
-            Stat::make('Total Verified Users', $verifiedCount)
+            Stat::make('Total Transactions Amount', 'TZS 40,000')
                 ->descriptionIcon('heroicon-m-users')
                 ->color($verifiedCount > 0 ? 'primary' : 'gray'),
-            Stat::make('Total Unverified Users', $unverifiedCount)
+            Stat::make('Total Registered User', '600K')
                 ->descriptionIcon('heroicon-m-users')
-                ->color($unverifiedCount > 0 ? 'danger' : 'gray'),
-            Stat::make('Total Registered Users', $userCount)
+                ->color($verifiedCount > 0 ? 'info' : 'gray'),
+            Stat::make('Wallet Balance ', 'TZS 9,000,000')
                 ->descriptionIcon('heroicon-m-users')
-                ->chart($this->generateChart())
-                ->color($userCount > 0 ? 'info' : 'gray'),
-            Stat::make('Daily Active Users', $dailyActiveUsersCount)
-                ->descriptionIcon('heroicon-m-chart-bar')
-                ->chart($this->generateChart())
-                ->color($dailyActiveUsersCount > 0 ? 'success' : 'gray'),
-            Stat::make('Monthly Active Users', $monthlyActiveUsersCount)
-                ->descriptionIcon('heroicon-m-chart-bar')
-                ->chart($this->generateChart())
-                ->color($monthlyActiveUsersCount > 0 ? 'warning' : 'gray'),
-            Stat::make('Yearly Active Users', $yearlyActiveUsersCount)
-                ->descriptionIcon('heroicon-m-chart-bar')
-                ->chart($this->generateChart())
-                ->color($yearlyActiveUsersCount > 0 ? 'warning' : 'gray'),
-            Stat::make('Total Male Users', $maleCount)
-                ->descriptionIcon('heroicon-m-users')
-                ->color($maleCount > 0 ? 'primary' : 'gray'),
-            Stat::make('Total Female Users', $femaleCount)
-                ->descriptionIcon('heroicon-m-users')
-                ->color($femaleCount > 0 ? 'primary' : 'gray'),
-            Stat::make('Total Other Gender Users', $otherCount)
-                ->descriptionIcon('heroicon-m-users')
-                ->color($otherCount > 0 ? 'primary' : 'gray')
+                ->color($verifiedCount > 0 ? 'success' : 'gray'),
+//            Stat::make('Total Verified Users', $verifiedCount)
+//                ->descriptionIcon('heroicon-m-users')
+//                ->color($verifiedCount > 0 ? 'primary' : 'gray'),
+//            Stat::make('Total Unverified Users', $unverifiedCount)
+//                ->descriptionIcon('heroicon-m-users')
+//                ->color($unverifiedCount > 0 ? 'danger' : 'gray'),
+//            Stat::make('Total Registered Users', $userCount)
+//                ->descriptionIcon('heroicon-m-users')
+//                ->chart($this->generateChart())
+//                ->color($userCount > 0 ? 'info' : 'gray'),
+//            Stat::make('Daily Active Users', $dailyActiveUsersCount)
+//                ->descriptionIcon('heroicon-m-chart-bar')
+//                ->chart($this->generateChart())
+//                ->color($dailyActiveUsersCount > 0 ? 'success' : 'gray'),
+//            Stat::make('Monthly Active Users', $monthlyActiveUsersCount)
+//                ->descriptionIcon('heroicon-m-chart-bar')
+//                ->chart($this->generateChart())
+//                ->color($monthlyActiveUsersCount > 0 ? 'warning' : 'gray'),
+//            Stat::make('Yearly Active Users', $yearlyActiveUsersCount)
+//                ->descriptionIcon('heroicon-m-chart-bar')
+//                ->chart($this->generateChart())
+//                ->color($yearlyActiveUsersCount > 0 ? 'warning' : 'gray'),
+//            Stat::make('Total Male Users', $maleCount)
+//                ->descriptionIcon('heroicon-m-users')
+//                ->color($maleCount > 0 ? 'primary' : 'gray'),
+//            Stat::make('Total Female Users', $femaleCount)
+//                ->descriptionIcon('heroicon-m-users')
+//                ->color($femaleCount > 0 ? 'primary' : 'gray'),
+//            Stat::make('Total Other Gender Users', $otherCount)
+//                ->descriptionIcon('heroicon-m-users')
+//                ->color($otherCount > 0 ? 'primary' : 'gray')
         ];
     }
 
