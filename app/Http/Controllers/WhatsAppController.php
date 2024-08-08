@@ -68,12 +68,24 @@ class WhatsAppController extends Controller
                 Whatsapp::send($recipientNumber, TextMessage::create($responseText));
                 $this->markMessageAsRead($message['id']);
 
-                // Save the user interaction
-                $userInteraction = new UserInteraction();
-                $userInteraction->recipient_id = $recipientNumber;
-                $userInteraction->user_message = $userMessage;
-                $userInteraction->bot_response = $responseText;
-                $userInteraction->save();
+                // Log the user interaction data before saving to the second database
+                Log::debug('Saving user interaction to second database', [
+                    'recipient_id' => $recipientNumber,
+                    'user_message' => $userMessage,
+                    'bot_response' => $responseText,
+                ]);
+
+                // Save the user interaction to the second database
+                try {
+                    $userInteraction = new UserInteraction();
+                    $userInteraction->recipient_id = $recipientNumber;
+                    $userInteraction->user_message = $userMessage;
+                    $userInteraction->bot_response = $responseText;
+                    $userInteraction->save();
+                    Log::debug('User interaction saved to second database');
+                } catch (\Exception $e) {
+                    Log::error('Error saving user interaction to second database: ' . $e->getMessage());
+                }
             }
         }
     }
