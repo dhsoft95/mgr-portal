@@ -31,7 +31,8 @@
         "psr/simple-cache": "^2.0",
         "pxlrbt/filament-excel": "^2.3",
         "saade/filament-laravel-log": "^3.0",
-        "swisnl/filament-backgrounds": "^1.1"
+        "swisnl/filament-backgrounds": "^1.1",
+      "ext-pdo": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

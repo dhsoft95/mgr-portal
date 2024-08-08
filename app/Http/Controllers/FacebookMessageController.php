@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 
 class FacebookMessageController extends Controller
 {
-    public function sendMessage(Request $request)
+    public function sendMessage(Request $request): \Illuminate\Http\JsonResponse
     {
         // Extract recipient IDs from the request
         $recipients = $request->input('recipients');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserInteraction;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -66,6 +67,13 @@ class WhatsAppController extends Controller
                 $responseText = $this->getGeminiResponse($userMessage);
                 Whatsapp::send($recipientNumber, TextMessage::create($responseText));
                 $this->markMessageAsRead($message['id']);
+
+                // Save the user interaction
+                $userInteraction = new UserInteraction();
+                $userInteraction->recipient_id = $recipientNumber;
+                $userInteraction->user_message = $userMessage;
+                $userInteraction->bot_response = $responseText;
+                $userInteraction->save();
             }
         }
     }
