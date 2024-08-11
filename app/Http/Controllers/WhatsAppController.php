@@ -74,7 +74,7 @@ class WhatsAppController extends Controller
                 $this->markMessageAsRead($message['id']);
 
                 try {
-                    $userInteraction = UserInteraction::on('second_db')->firstOrNew(['recipient_id' => $recipientNumber]);
+                    $userInteraction = UserInteraction::on('second_database')->firstOrNew(['recipient_id' => $recipientNumber]);
                     $userInteraction->recipient_id = $recipientNumber;
                     $userInteraction->user_message = $userMessage;
                     $userInteraction->bot_response = $responseText;
@@ -127,7 +127,7 @@ class WhatsAppController extends Controller
 
     protected function checkEscalationNeeded(UserInteraction $interaction)
     {
-        $recentInteractions = UserInteraction::on('second_db')
+        $recentInteractions = UserInteraction::on('second_database')
             ->where('recipient_id', $interaction->recipient_id)
             ->where('created_at', '>=', now()->subHour())
             ->count();
@@ -156,7 +156,7 @@ class WhatsAppController extends Controller
     protected function escalateInteraction(UserInteraction $interaction, int $level)
     {
         $escalatedCase = new EscalatedCase();
-        $escalatedCase->setConnection('second_db');
+        $escalatedCase->setConnection('second_database');
         $escalatedCase->user_interaction_id = $interaction->id;
         $escalatedCase->recipient_id = $interaction->recipient_id;
         $escalatedCase->escalation_level = $level;
