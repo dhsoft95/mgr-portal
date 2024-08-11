@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::connection('second_database')->create('user_interactions', function (Blueprint $table) {
+        Schema::connection('second_db')->create('escalated_cases', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_interaction_id');
             $table->string('recipient_id');
-            $table->text('user_message');
-            $table->text('bot_response');
-            $table->string('type');
-            $table->json('conversation')->nullable();
+            $table->integer('escalation_level');
+            $table->string('status');
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::connection('second_database')->dropIfExists('user_interactions');
+        Schema::dropIfExists('escalated_cases');
     }
 };

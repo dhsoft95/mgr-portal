@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EscalationNotification;
+use App\Models\EscalatedCase;
 use App\Models\UserInteraction;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use MissaelAnda\Whatsapp\Facade\Whatsapp;
 use MissaelAnda\Whatsapp\Messages\TextMessage;
 
@@ -64,31 +68,117 @@ class WhatsAppController extends Controller
             if ($message['type'] === 'text' && isset($message['text']['body'])) {
                 $recipientNumber = $message['from'];
                 $userMessage = $message['text']['body'];
+                $messageType = $this->classifyMessageType($userMessage);
                 $responseText = $this->getGeminiResponse($userMessage);
                 Whatsapp::send($recipientNumber, TextMessage::create($responseText));
                 $this->markMessageAsRead($message['id']);
 
-                // Log the user interaction data before saving to the second database
-                Log::debug('Saving user interaction to second database', [
-                    'recipient_id' => $recipientNumber,
-                    'user_message' => $userMessage,
-                    'bot_response' => $responseText,
-                ]);
-
-                // Save the user interaction to the second database
                 try {
-                    $userInteraction = new UserInteraction();
+                    $userInteraction = UserInteraction::on('second_db')->firstOrNew(['recipient_id' => $recipientNumber]);
                     $userInteraction->recipient_id = $recipientNumber;
                     $userInteraction->user_message = $userMessage;
                     $userInteraction->bot_response = $responseText;
+                    $userInteraction->type = $messageType;
+
+                    // Append to the conversation
+                    $conversation = $userInteraction->conversation ?? [];
+                    $conversation[] = [
+                        'timestamp' => now()->toDateTimeString(),
+                        'user_message' => $userMessage,
+                        'bot_response' => $responseText
+                    ];
+                    $userInteraction->conversation = $conversation;
+
                     $userInteraction->save();
-                    Log::debug('User interaction saved to second database');
+
+                    // Check if escalation is needed
+                    $escalationLevel = $this->checkEscalationNeeded($userInteraction);
+                    if ($escalationLevel > 0) {
+                        $this->escalateInteraction($userInteraction, $escalationLevel);
+                    }
                 } catch (\Exception $e) {
-                    Log::error('Error saving user interaction to second database: ' . $e->getMessage());
+                    Log::error('Error processing user interaction: ' . $e->getMessage());
                 }
             }
         }
     }
+
+    protected function checkEscalationNeeded(UserInteraction $interaction)
+    {
+        $recentInteractions = UserInteraction::on('second_db')
+            ->where('recipient_id', $interaction->recipient_id)
+            ->where('created_at', '>=', now()->subHour())
+            ->count();
+
+        // Check for keywords indicating urgency
+        $urgentKeywords = ['urgent', 'emergency', 'immediately', 'asap'];
+        $containsUrgentKeyword = Str::contains(strtolower($interaction->user_message), $urgentKeywords);
+
+        // Escalation levels:
+        // 0 - No escalation needed
+        // 1 - Low priority escalation
+        // 2 - Medium priority escalation
+        // 3 - High priority escalation
+
+        if ($interaction->type === 'complaint' && $containsUrgentKeyword) {
+            return 3; // High priority
+        } elseif ($interaction->type === 'complaint' || $recentInteractions >= 5) {
+            return 2; // Medium priority
+        } elseif ($recentInteractions >= 3 || $containsUrgentKeyword) {
+            return 1; // Low priority
+        }
+
+        return 0; // No escalation needed
+    }
+
+    protected function escalateInteraction(UserInteraction $interaction, int $level)
+    {
+        $escalatedCase = new EscalatedCase();
+        $escalatedCase->setConnection('second_db');
+        $escalatedCase->user_interaction_id = $interaction->id;
+        $escalatedCase->recipient_id = $interaction->recipient_id;
+        $escalatedCase->escalation_level = $level;
+        $escalatedCase->status = 'open';
+        $escalatedCase->save();
+
+        $this->notifyEscalationTeam($escalatedCase);
+        $this->sendEscalationMessageToUser($interaction->recipient_id, $level);
+
+        Log::alert('Interaction escalated', [
+            'interaction_id' => $interaction->id,
+            'recipient_id' => $interaction->recipient_id,
+            'type' => $interaction->type,
+            'escalation_level' => $level,
+        ]);
+    }
+
+    protected function notifyEscalationTeam(EscalatedCase $case)
+    {
+        Log::info('Notifying escalation team', [
+            'case_id' => $case->id,
+            'recipient_id' => $case->recipient_id,
+            'level' => $case->escalation_level,
+        ]);
+
+        // Get support email addresses from configuration
+        $supportEmails = config('support.escalation_emails', ['default@example.com']);
+
+        // Send email to support team
+        Mail::to($supportEmails)->send(new EscalationNotification($case));
+    }
+
+    protected function sendEscalationMessageToUser($recipientId, $level): void
+    {
+        $messages = [
+            1 => "We've noted your concern and a support representative will get back to you soon.",
+            2 => "We understand your issue is important. Our priority support team has been notified and will contact you shortly.",
+            3 => "We apologize for the inconvenience. This has been escalated to our highest priority team, and you will be contacted immediately.",
+        ];
+
+        $message = $messages[$level] ?? $messages[1];
+        Whatsapp::send($recipientId, TextMessage::create($message));
+    }
+
 
     protected function getGeminiResponse($userMessage)
     {

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserInteraction extends Model
 {
     use HasFactory;
+
     protected $connection = 'second_database';
     protected $table = 'user_interactions';
 
@@ -15,5 +16,11 @@ class UserInteraction extends Model
         'recipient_id',
         'user_message',
         'bot_response',
+        'type',
+        'conversation'
+    ];
+
+    protected $casts = [
+        'conversation' => 'array'
     ];
 }
