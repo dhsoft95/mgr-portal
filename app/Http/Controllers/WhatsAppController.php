@@ -214,17 +214,17 @@ class WhatsAppController extends Controller
         Mail::to($supportEmails)->send(new EscalationNotification($case));
     }
 
-//    protected function sendEscalationMessageToUser($recipientId, $level): void
-//    {
-//        $messages = [
-//            1 => "We've noted your concern and a support representative will get back to you soon.",
-//            2 => "We understand your issue is important. Our priority support team has been notified and will contact you shortly.",
-//            3 => "We apologize for the inconvenience. This has been escalated to our highest priority team, and you will be contacted immediately.",
-//        ];
-//
-//        $message = $messages[$level] ?? $messages[1];
-//        Whatsapp::send($recipientId, TextMessage::create($message));
-//    }
+    protected function sendEscalationMessageToUser($recipientId, $level): void
+    {
+        $messages = [
+            1 => "We've noted your concern and a support representative will get back to you soon.",
+            2 => "We understand your issue is important. Our priority support team has been notified and will contact you shortly.",
+            3 => "We apologize for the inconvenience. This has been escalated to our highest priority team, and you will be contacted immediately.",
+        ];
+
+        $message = $messages[$level] ?? $messages[1];
+        Whatsapp::send($recipientId, TextMessage::create($message));
+    }
 
     protected function handleMessageReadStatus($recipientId, $messageId, $timestamp): void
     {
