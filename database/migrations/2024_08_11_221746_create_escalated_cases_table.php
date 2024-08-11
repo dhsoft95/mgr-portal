@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::connection('second_db')->create('escalated_cases', function (Blueprint $table) {
+        Schema::connection('second_database')->create('escalated_cases', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_interaction_id');
             $table->string('recipient_id');
