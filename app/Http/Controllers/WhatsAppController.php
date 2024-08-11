@@ -69,16 +69,33 @@ class WhatsAppController extends Controller
                 $recipientNumber = $message['from'];
                 $userMessage = $message['text']['body'];
                 $messageType = $this->classifyMessageType($userMessage);
-                $responseText = $this->getGeminiResponse($userMessage);
-                Whatsapp::send($recipientNumber, TextMessage::create($responseText));
-                $this->markMessageAsRead($message['id']);
+
+                // Don't generate a Gemini response yet
+                $responseText = '';
 
                 try {
                     $userInteraction = UserInteraction::on('second_database')->firstOrNew(['recipient_id' => $recipientNumber]);
                     $userInteraction->recipient_id = $recipientNumber;
                     $userInteraction->user_message = $userMessage;
-                    $userInteraction->bot_response = $responseText;
                     $userInteraction->type = $messageType;
+
+                    // Check if escalation is needed
+                    $escalationLevel = $this->checkEscalationNeeded($userInteraction);
+
+                    if ($escalationLevel > 0) {
+                        // If escalation is needed, use the escalation message
+                        $responseText = $this->getEscalationMessage($escalationLevel);
+                        $this->escalateInteraction($userInteraction, $escalationLevel);
+                    } else {
+                        // If no escalation is needed, get the Gemini response
+                        $responseText = $this->getGeminiResponse($userMessage);
+                    }
+
+                    // Send the response (either escalation or Gemini)
+                    Whatsapp::send($recipientNumber, TextMessage::create($responseText));
+
+                    // Update the user interaction with the response
+                    $userInteraction->bot_response = $responseText;
 
                     // Append to the conversation
                     $conversation = $userInteraction->conversation ?? [];
@@ -91,16 +108,24 @@ class WhatsAppController extends Controller
 
                     $userInteraction->save();
 
-                    // Check if escalation is needed
-                    $escalationLevel = $this->checkEscalationNeeded($userInteraction);
-                    if ($escalationLevel > 0) {
-                        $this->escalateInteraction($userInteraction, $escalationLevel);
-                    }
+                    $this->markMessageAsRead($message['id']);
                 } catch (\Exception $e) {
                     Log::error('Error processing user interaction: ' . $e->getMessage());
                 }
             }
         }
+    }
+
+// New method to get the escalation message
+    protected function getEscalationMessage($level): string
+    {
+        $messages = [
+            1 => "We've noted your concern and a support representative will get back to you soon.",
+            2 => "We understand your issue is important. Our priority support team has been notified and will contact you shortly.",
+            3 => "We apologize for the inconvenience. This has been escalated to our highest priority team, and you will be contacted immediately.",
+        ];
+
+        return $messages[$level] ?? $messages[1];
     }
 
     protected function classifyMessageType($message)
