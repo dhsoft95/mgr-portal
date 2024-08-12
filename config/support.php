@@ -2,7 +2,7 @@
 
 return [
     'escalation_emails' => [
-        'david.haule@simbamoney.com',
+        'support@simbamoney.com',
         'david.haule@simbavit.co.tz',
     ],
 ];
