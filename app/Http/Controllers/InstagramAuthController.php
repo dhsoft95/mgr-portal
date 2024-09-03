@@ -18,7 +18,7 @@ class InstagramAuthController extends Controller
         $authUrl = "https://api.instagram.com/oauth/authorize?"
             . "client_id={$clientId}"
             . "&redirect_uri=" . urlencode($redirectUri)
-            . "&scope=user_profile"
+            . "&scope=instagram_basic,instagram_content_publish"
             . "&response_type=code";
 
         Log::info('Redirecting to Instagram with URL: ' . $authUrl);
