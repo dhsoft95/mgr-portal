@@ -69,21 +69,57 @@ class InstagramController extends Controller
         }
     }
 
-    public function handleWebhook(Request $request): \Illuminate\Http\JsonResponse
+    public function handleWebhook(Request $request)
     {
         $payload = $request->all();
         Log::info('Received webhook payload', $payload);
 
         if ($payload['object'] === 'instagram') {
             foreach ($payload['entry'] as $entry) {
-                $this->processEntry($entry);
+                $instagramAccountId = $entry['id'];
+                Log::info("Processing entry for Instagram Account ID: {$instagramAccountId}");
+
+                if (isset($entry['messaging'])) {
+                    foreach ($entry['messaging'] as $messagingEvent) {
+                        $senderId = $messagingEvent['sender']['id'];
+                        $recipientId = $messagingEvent['recipient']['id'];
+
+                        Log::info("Message event: Sender ID: {$senderId}, Recipient ID: {$recipientId}");
+
+                        if (isset($messagingEvent['message'])) {
+                            $message = $messagingEvent['message']['text'];
+                            $messageId = $messagingEvent['message']['mid'];
+                            $isEcho = $messagingEvent['message']['is_echo'] ?? false;
+
+                            if ($isEcho) {
+                                Log::info("Echo message detected. Skipping processing.");
+                                continue;
+                            }
+
+                            $this->handleIncomingMessage($senderId, $recipientId, $message, $messageId);
+                        }
+                    }
+                }
             }
         }
 
         return response()->json(['status' => 'OK']);
     }
 
-    protected function processEntry($entry)
+    protected function handleIncomingMessage($senderId, $recipientId, $message, $messageId): void
+    {
+        Log::info("Received message from {$senderId} to {$recipientId}: {$message}");
+
+        // Here you can add logic to process the message
+        // For example, you might want to save it to your database
+
+        // Only send a reply if it's not an echo message (i.e., when sender is not the page itself)
+        if ($senderId !== $recipientId) {
+            $this->sendReply($senderId, "Thanks for your message: {$message}");
+        }
+    }
+
+    protected function processEntry($entry): void
     {
         if (isset($entry['messaging'])) {
             foreach ($entry['messaging'] as $messagingEvent) {
@@ -98,16 +134,7 @@ class InstagramController extends Controller
         }
     }
 
-    protected function handleIncomingMessage($senderId, $message, $messageId)
-    {
-        Log::info("Received message from {$senderId}: {$message}");
 
-        // Here you can add logic to process the message
-        // For example, you might want to save it to your database
-
-        // For now, let's just send a simple reply
-        $this->sendReply($senderId, "Thanks for your message: {$message}");
-    }
 
     public function sendReply($recipientId, $message)
     {
