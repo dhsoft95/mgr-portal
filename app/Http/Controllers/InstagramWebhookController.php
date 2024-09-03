@@ -4,14 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\InstagramApiController;
+
 
 class InstagramWebhookController extends Controller
 {
     private $verifyToken;
     private $instagramApiController;
 
-    public function __construct(InstagramApiController $instagramApiController)
+    public function __construct(InstagramController $instagramApiController)
     {
         $this->verifyToken = config('services.instagram.webhook_verify_token');
         $this->instagramApiController = $instagramApiController;
