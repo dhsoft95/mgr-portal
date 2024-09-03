@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 class InstagramController extends Controller
 {
     private $accessToken;
-    private $apiVersion = 'v18.0';
+    private $apiVersion = 'v20.0';
 
     public function __construct()
     {
