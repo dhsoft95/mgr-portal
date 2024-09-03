@@ -62,6 +62,7 @@ class InstagramAuthController extends Controller
         ]);
 
         if (!$response->successful()) {
+            Log::error('Failed to obtain access token: ' . $response->body());
             throw new \Exception('Failed to obtain access token: ' . $response->body());
         }
 
