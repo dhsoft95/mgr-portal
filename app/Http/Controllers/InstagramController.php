@@ -145,7 +145,7 @@ class InstagramController extends Controller
 
         $recipientId = $request->input('recipient_id');
         $message = $request->input('message');
-        $instagramAccountId = '17841453017248434'; // Your Instagram Account ID
+        $instagramAccountId = '407346398980250'; // Your Instagram Account ID
 
         $url = "https://graph.facebook.com/v18.0/{$instagramAccountId}/messages";
 
