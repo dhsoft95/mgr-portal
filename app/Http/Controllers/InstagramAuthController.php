@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class InstagramAuthController extends Controller
 {
-    public function redirectToInstagram(): \Illuminate\Foundation\Application|\Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse|\Illuminate\Contracts\Foundation\Application
+    public function redirectToInstagram()
     {
         $clientId = config('services.instagram.client_id');
         $redirectUri = config('services.instagram.redirect_uri');
@@ -18,7 +18,7 @@ class InstagramAuthController extends Controller
         $authUrl = "https://api.instagram.com/oauth/authorize"
             . "?client_id=" . $clientId
             . "&redirect_uri=" . urlencode($redirectUri)
-            . "&scope=user_profile,user_media"
+            . "&scope=user_profile"
             . "&response_type=code";
 
         Log::info('Redirecting to Instagram with URL: ' . $authUrl);
@@ -26,11 +26,15 @@ class InstagramAuthController extends Controller
         return redirect($authUrl);
     }
 
-    public function handleCallback(Request $request): \Illuminate\Http\RedirectResponse
+
+    public function handleCallback(Request $request)
     {
+        Log::info('Received callback from Instagram', $request->all());
+
         $code = $request->query('code');
 
         if (!$code) {
+            Log::error('No code received in callback');
             return redirect()->route('home')->with('error', 'Authorization code not received');
         }
 
@@ -38,18 +42,9 @@ class InstagramAuthController extends Controller
             $accessToken = $this->getAccessToken($code);
             $userInfo = $this->getUserInfo($accessToken);
 
-            // Save or update user
-            $user = User::updateOrCreate(
-                ['instagram_id' => $userInfo['id']],
-                [
-                    'name' => $userInfo['username'],
-                    'instagram_access_token' => $accessToken,
-                ]
-            );
+            Log::info('Successfully authenticated user', ['user_info' => $userInfo]);
 
-            Auth::login($user);
-
-            return redirect()->route('dashboard')->with('success', 'Instagram account connected successfully');
+            // ... rest of your method
         } catch (\Exception $e) {
             Log::error('Instagram authentication error: ' . $e->getMessage());
             return redirect()->route('home')->with('error', 'Failed to connect Instagram account: ' . $e->getMessage());
