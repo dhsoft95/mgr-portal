@@ -22,10 +22,19 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+
     protected $fillable = [
         'name',
         'email',
         'password',
+        'instagram_id',
+        'instagram_access_token',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'instagram_access_token',
     ];
 
     /**
@@ -33,10 +42,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+
 
     /**
      * The attributes that should be cast.

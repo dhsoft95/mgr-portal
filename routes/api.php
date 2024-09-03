@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\FacebookMessageController;
 use App\Http\Controllers\InstagramController;
+use App\Http\Controllers\InstagramWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -21,8 +22,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::post('/send-message', [FacebookMessageController::class, 'sendMessage']);
 
+Route::post('/instagram/publish', [InstagramController::class, 'publishPost']);
+Route::get('/instagram/messages', [InstagramController::class, 'readMessages']);
+Route::post('/instagram/send-message', [InstagramController::class, 'sendMessage']);
 
-Route::post('/instagram/send-post', [InstagramController::class, 'sendPost']);
-Route::get('/instagram/read-messages', [InstagramController::class, 'readMessages']);
-Route::match(['get', 'post'], '/instagram/webhook', [InstagramController::class, 'receiveWebhook']);
-
+// Instagram Webhook route
+Route::match(['get', 'post'], '/instagram/webhook', [InstagramWebhookController::class, 'handleWebhook']);
