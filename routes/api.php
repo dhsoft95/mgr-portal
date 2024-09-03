@@ -29,5 +29,6 @@ Route::get('/instagram/messages', [InstagramController::class, 'readMessages']);
 Route::post('/instagram/webhook', [InstagramController::class, 'handleWebhook']);
 Route::post('/instagram/send-reply', [InstagramController::class, 'sendReply']);
 
+
 // Instagram Webhook route
 Route::match(['get', 'post'], '/instagram/webhook', [InstagramWebhookController::class, 'handleWebhook']);
