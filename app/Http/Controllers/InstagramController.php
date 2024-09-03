@@ -52,7 +52,7 @@ class InstagramController extends Controller
         return response()->json(['error' => 'Failed to create post'], 500);
     }
 
-    public function readMessages()
+    public function readMessages(): \Illuminate\Http\JsonResponse
     {
         $endpoint = "https://graph.facebook.com/{$this->apiVersion}/me/conversations";
 
@@ -74,9 +74,8 @@ class InstagramController extends Controller
         return response()->json(['error' => 'Failed to fetch messages'], 500);
     }
 
-    public function receiveWebhook(Request $request)
+    public function receiveWebhook(Request $request): \Illuminate\Foundation\Application|\Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory
     {
-        // Verification for the initial webhook setup
         if ($request->isMethod('get')) {
             $mode = $request->query('hub_mode');
             $token = $request->query('hub_verify_token');
@@ -91,7 +90,6 @@ class InstagramController extends Controller
             return response('Forbidden', 403);
         }
 
-        // Handle incoming webhook payloads
         $payload = $request->all();
         Log::info('Received webhook payload', $payload);
 
@@ -115,7 +113,7 @@ class InstagramController extends Controller
         return response()->json(['status' => 'OK']);
     }
 
-    private function processIncomingMessage($senderId, $messageText, $messageId)
+    private function processIncomingMessage($senderId, $messageText, $messageId): void
     {
         Log::info("Received Instagram message from {$senderId}: {$messageText}");
 
@@ -136,7 +134,7 @@ class InstagramController extends Controller
         $this->sendReply($senderId, "Thank you for your message: {$messageText}");
     }
 
-    private function saveConversation($convoData)
+    private function saveConversation($convoData): void
     {
         $participantId = $convoData['participants']['data'][0]['id'];
 

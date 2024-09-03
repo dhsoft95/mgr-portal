@@ -25,3 +25,4 @@ Route::post('/send-message', [FacebookMessageController::class, 'sendMessage']);
 Route::post('/instagram/send-post', [InstagramController::class, 'sendPost']);
 Route::get('/instagram/read-messages', [InstagramController::class, 'readMessages']);
 Route::match(['get', 'post'], '/instagram/webhook', [InstagramController::class, 'receiveWebhook']);
+
