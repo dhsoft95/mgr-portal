@@ -23,12 +23,5 @@ Route::get('/test-chart', function () {
 
 Route::get('posts/create', CreatePost::class);
 
-// Define routes for WhatsApp webhook and message sending
-//Route::get('/webhook', [WhatsAppController::class, 'webhook'])->name('whatsapp.webhook.get');
-//Route::post('/webhook', [WhatsAppController::class, 'webhook'])->name('whatsapp.webhook.post');
-//Route::post('/send-message', [WhatsAppController::class, 'sendMessage'])->name('whatsapp.send.message');
-//Route::get('/send-test-message', [WhatsAppController::class, 'testSendMessage']);
-//
-//Route::get('/test-webhook', [WhatsAppController::class, 'testWebhook']);
-//Route::post('/whatsapp/webhook', [WhatsAppController::class, 'handleWebhook']);
+
 Route::post('/whatsapp/webhook', [WhatsAppController::class, 'handleWebhook']);

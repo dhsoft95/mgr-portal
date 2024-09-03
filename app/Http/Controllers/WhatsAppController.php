@@ -7,6 +7,7 @@ use App\Models\EscalatedCase;
 use App\Mail\EscalationNotification;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use MissaelAnda\Whatsapp\Facade\Whatsapp;
@@ -62,7 +63,7 @@ class WhatsAppController extends Controller
         }
     }
 
-    protected function processReceivedMessages($messages)
+    protected function processReceivedMessages($messages): void
     {
         foreach ($messages as $message) {
             if ($message['type'] === 'text' && isset($message['text']['body'])) {
@@ -70,7 +71,6 @@ class WhatsAppController extends Controller
                 $userMessage = $message['text']['body'];
                 $messageType = $this->classifyMessageType($userMessage);
 
-                // Don't generate a Gemini response yet
                 $responseText = '';
 
                 try {
@@ -79,42 +79,63 @@ class WhatsAppController extends Controller
                     $userInteraction->user_message = $userMessage;
                     $userInteraction->type = $messageType;
 
-                    // Check if escalation is needed
-                    $escalationLevel = $this->checkEscalationNeeded($userInteraction);
+                    // Use a lock to prevent race conditions
+                    $lockKey = "escalation_lock_{$recipientNumber}";
+                    if (Cache::add($lockKey, true, 10)) { // Lock for 10 seconds
+                        try {
+                            $escalationLevel = $this->checkEscalationNeeded($userInteraction);
 
-                    if ($escalationLevel > 0) {
-                        // If escalation is needed, use the escalation message
-                        $responseText = $this->getEscalationMessage($escalationLevel);
-                        $this->escalateInteraction($userInteraction, $escalationLevel);
+                            if ($escalationLevel > 0 && !$this->isRecentlyEscalated($recipientNumber)) {
+                                $responseText = $this->getEscalationMessage($escalationLevel);
+                                $this->escalateInteraction($userInteraction, $escalationLevel);
+                                $this->markRecentlyEscalated($recipientNumber);
+                            } else {
+                                $responseText = $this->getGeminiResponse($userMessage);
+                            }
+
+                            // Send the response only if it's not empty
+                            if (!empty($responseText)) {
+                                Whatsapp::send($recipientNumber, TextMessage::create($responseText));
+                            }
+
+                            // Update the user interaction with the response
+                            $userInteraction->bot_response = $responseText;
+
+                            // Append to the conversation
+                            $conversation = $userInteraction->conversation ?? [];
+                            $conversation[] = [
+                                'timestamp' => now()->toDateTimeString(),
+                                'user_message' => $userMessage,
+                                'bot_response' => $responseText
+                            ];
+                            $userInteraction->conversation = $conversation;
+
+                            $userInteraction->save();
+
+                            $this->markMessageAsRead($message['id']);
+                        } finally {
+                            Cache::forget($lockKey); // Release the lock
+                        }
                     } else {
-                        // If no escalation is needed, get the Gemini response
-                        $responseText = $this->getGeminiResponse($userMessage);
+                        Log::warning("Escalation attempt blocked due to lock for recipient: $recipientNumber");
                     }
-
-                    // Send the response (either escalation or Gemini)
-                    Whatsapp::send($recipientNumber, TextMessage::create($responseText));
-
-                    // Update the user interaction with the response
-                    $userInteraction->bot_response = $responseText;
-
-                    // Append to the conversation
-                    $conversation = $userInteraction->conversation ?? [];
-                    $conversation[] = [
-                        'timestamp' => now()->toDateTimeString(),
-                        'user_message' => $userMessage,
-                        'bot_response' => $responseText
-                    ];
-                    $userInteraction->conversation = $conversation;
-
-                    $userInteraction->save();
-
-                    $this->markMessageAsRead($message['id']);
                 } catch (\Exception $e) {
                     Log::error('Error processing user interaction: ' . $e->getMessage());
                 }
             }
         }
     }
+
+    protected function isRecentlyEscalated($recipientId): bool
+    {
+        return Cache::has("recent_escalation_{$recipientId}");
+    }
+
+    protected function markRecentlyEscalated($recipientId): void
+    {
+        Cache::put("recent_escalation_{$recipientId}", true, now()->addMinutes(5));
+    }
+
 
 // New method to get the escalation message
     protected function getEscalationMessage($level): string
@@ -128,7 +149,7 @@ class WhatsAppController extends Controller
         return $messages[$level] ?? $messages[1];
     }
 
-    protected function classifyMessageType($message)
+    protected function classifyMessageType($message): string
     {
         $message = strtolower($message);
 
