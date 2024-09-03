@@ -53,16 +53,27 @@ class InstagramAuthController extends Controller
 
     private function getAccessToken($code)
     {
+        $clientId = config('services.instagram.client_id');
+        $clientSecret = config('services.instagram.client_secret');
+        $redirectUri = config('services.instagram.redirect_uri');
+
+        Log::info('Attempting to get access token with:', [
+            'client_id' => $clientId,
+            'client_secret' => substr($clientSecret, 0, 5) . '...',  // Log only the first 5 characters for security
+            'redirect_uri' => $redirectUri,
+            'code' => substr($code, 0, 5) . '...',  // Log only the first 5 characters of the code
+        ]);
+
         $response = Http::post('https://api.instagram.com/oauth/access_token', [
-            'client_id' => config('services.instagram.client_id'),
-            'client_secret' => config('services.instagram.client_secret'),
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
             'grant_type' => 'authorization_code',
-            'redirect_uri' => config('services.instagram.redirect_uri'),
+            'redirect_uri' => $redirectUri,
             'code' => $code,
         ]);
 
         if (!$response->successful()) {
-            Log::error('Failed to obtain access token: ' . $response->body());
+            Log::error('Failed to obtain access token. Response: ' . $response->body());
             throw new \Exception('Failed to obtain access token: ' . $response->body());
         }
 
