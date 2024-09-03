@@ -14,14 +14,19 @@ class InstagramAuthController extends Controller
     {
         $clientId = config('services.instagram.client_id');
         $redirectUri = config('services.instagram.redirect_uri');
-        $scope = 'business_basic,business_manage_messages,business_content_publish';
 
-        $instagramAuthUrl = "https://www.instagram.com/oauth/authorize?client_id={$clientId}&redirect_uri={$redirectUri}&scope={$scope}&response_type=code";
+        $authUrl = "https://api.instagram.com/oauth/authorize?"
+            . "client_id={$clientId}"
+            . "&redirect_uri=" . urlencode($redirectUri)
+            . "&scope=user_profile,user_media"
+            . "&response_type=code";
 
-        return redirect($instagramAuthUrl);
+        Log::info('Redirecting to Instagram with URL: ' . $authUrl);
+
+        return redirect($authUrl);
     }
 
-    public function handleCallback(Request $request)
+    public function handleCallback(Request $request): \Illuminate\Http\RedirectResponse
     {
         $code = $request->query('code');
 
@@ -59,12 +64,12 @@ class InstagramAuthController extends Controller
 
         Log::info('Attempting to get access token with:', [
             'client_id' => $clientId,
-            'client_secret' => substr($clientSecret, 0, 5) . '...',  // Log only the first 5 characters for security
+            'client_secret' => substr($clientSecret, 0, 5) . '...',
             'redirect_uri' => $redirectUri,
-            'code' => substr($code, 0, 5) . '...',  // Log only the first 5 characters of the code
+            'code' => substr($code, 0, 5) . '...',
         ]);
 
-        $response = Http::post('https://api.instagram.com/oauth/access_token', [
+        $response = Http::asForm()->post('https://api.instagram.com/oauth/access_token', [
             'client_id' => $clientId,
             'client_secret' => $clientSecret,
             'grant_type' => 'authorization_code',

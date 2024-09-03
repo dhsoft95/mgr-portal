@@ -46,3 +46,4 @@ Route::get('/dashboard', function () {
 // Instagram auth routes
 Route::get('/instagram/auth', [InstagramAuthController::class, 'redirectToInstagram'])->name('instagram.auth');
 Route::get('/instagram/callback', [InstagramAuthController::class, 'handleCallback'])->name('instagram.callback');
+
