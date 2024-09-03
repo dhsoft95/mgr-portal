@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\Auth;
 
 class InstagramAuthController extends Controller
 {
-    public function redirectToInstagram()
+    public function redirectToInstagram(): \Illuminate\Foundation\Application|\Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse|\Illuminate\Contracts\Foundation\Application
     {
         $clientId = config('services.instagram.client_id');
         $redirectUri = config('services.instagram.redirect_uri');
 
-        $authUrl = "https://api.instagram.com/oauth/authorize?"
-            . "client_id={$clientId}"
+        $authUrl = "https://api.instagram.com/oauth/authorize"
+            . "?client_id=" . $clientId
             . "&redirect_uri=" . urlencode($redirectUri)
             . "&scope=user_profile,user_media"
             . "&response_type=code";
