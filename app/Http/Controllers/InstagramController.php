@@ -136,52 +136,20 @@ class InstagramController extends Controller
 
 
 
-    public function sendReply(Request $request)
+    public function sendReply($recipientId, $message)
     {
-        $request->validate([
-            'recipient_id' => 'required|string',
-            'message' => 'required|string',
+        $url = "https://graph.facebook.com/{$this->apiVersion}/me/messages";
+
+        $response = Http::post($url, [
+            'recipient' => ['id' => $recipientId],
+            'message' => ['text' => $message],
+            'access_token' => $this->accessToken,
         ]);
 
-        $recipientId = $request->input('recipient_id');
-        $message = $request->input('message');
-        $instagramAccountId = config('services.instagram.account_id');
-
-        $url = "https://graph.facebook.com/{$this->apiVersion}/{$instagramAccountId}/messages";
-
-        try {
-            $response = Http::post($url, [
-                'recipient' => ['id' => $recipientId],
-                'message' => ['text' => $message],
-                'access_token' => $this->accessToken,
-            ]);
-
-            $responseBody = $response->json();
-
-            if ($response->successful()) {
-                Log::info("Reply sent successfully to {$recipientId}", ['response' => $responseBody]);
-                return response()->json(['status' => 'success', 'message' => 'Reply sent successfully']);
-            } else {
-                Log::error("Failed to send reply to {$recipientId}", [
-                    'status_code' => $response->status(),
-                    'response' => $responseBody,
-                ]);
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Failed to send reply',
-                    'error_details' => $responseBody['error'] ?? 'Unknown error'
-                ], 500);
-            }
-        } catch (\Exception $e) {
-            Log::error("Exception occurred while sending reply", [
-                'recipient_id' => $recipientId,
-                'error' => $e->getMessage(),
-            ]);
-            return response()->json([
-                'status' => 'error',
-                'message' => 'An exception occurred while sending the reply',
-                'error_details' => $e->getMessage()
-            ], 500);
+        if ($response->successful()) {
+            Log::info("Reply sent successfully to {$recipientId}");
+        } else {
+            Log::error("Failed to send reply to {$recipientId}: " . $response->body());
         }
     }
 }
