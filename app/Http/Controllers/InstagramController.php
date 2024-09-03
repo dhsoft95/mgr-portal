@@ -136,7 +136,7 @@ class InstagramController extends Controller
 
 
 
-    public function sendReply(Request $request): \Illuminate\Http\JsonResponse
+    public function sendReply(Request $request)
     {
         $request->validate([
             'recipient_id' => 'required|string',
@@ -145,14 +145,14 @@ class InstagramController extends Controller
 
         $recipientId = $request->input('recipient_id');
         $message = $request->input('message');
-        $instagramAccountId = '52947479241'; // Your Instagram Account ID
+        $instagramAccountId = config('services.instagram.account_id');
 
-        $url = "https://graph.facebook.com/v18.0/{$instagramAccountId}/messages";
+        $url = "https://graph.facebook.com/{$this->apiVersion}/{$instagramAccountId}/messages";
 
         try {
             $response = Http::post($url, [
-                'recipient_id' => $recipientId,
-                'message' => json_encode(['text' => $message]),
+                'recipient' => ['id' => $recipientId],
+                'message' => ['text' => $message],
                 'access_token' => $this->accessToken,
             ]);
 
