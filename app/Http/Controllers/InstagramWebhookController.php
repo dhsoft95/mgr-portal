@@ -17,7 +17,7 @@ class InstagramWebhookController extends Controller
         $this->instagramApiController = $instagramApiController;
     }
 
-    public function handleWebhook(Request $request)
+    public function handleWebhook(Request $request): \Illuminate\Foundation\Application|\Illuminate\Http\Response|\Illuminate\Http\JsonResponse|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory
     {
         if ($request->isMethod('get')) {
             return $this->verifyWebhook($request);
@@ -26,7 +26,7 @@ class InstagramWebhookController extends Controller
         return $this->processWebhook($request);
     }
 
-    private function verifyWebhook(Request $request)
+    private function verifyWebhook(Request $request): \Illuminate\Foundation\Application|\Illuminate\Http\Response|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory
     {
         $mode = $request->query('hub_mode');
         $token = $request->query('hub_verify_token');
