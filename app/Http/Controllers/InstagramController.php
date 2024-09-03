@@ -136,8 +136,16 @@ class InstagramController extends Controller
 
 
 
-    public function sendReply($recipientId, $message)
+    public function sendReply(Request $request)
     {
+        $request->validate([
+            'recipient_id' => 'required|string',
+            'message' => 'required|string',
+        ]);
+
+        $recipientId = $request->input('recipient_id');
+        $message = $request->input('message');
+
         $url = "https://graph.facebook.com/{$this->apiVersion}/me/messages";
 
         $response = Http::post($url, [
@@ -148,8 +156,10 @@ class InstagramController extends Controller
 
         if ($response->successful()) {
             Log::info("Reply sent successfully to {$recipientId}");
+            return response()->json(['status' => 'success', 'message' => 'Reply sent successfully']);
         } else {
             Log::error("Failed to send reply to {$recipientId}: " . $response->body());
+            return response()->json(['status' => 'error', 'message' => 'Failed to send reply'], 500);
         }
     }
 }
