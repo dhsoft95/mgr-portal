@@ -2,24 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Conversation;
-use App\Models\Message;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class InstagramController extends Controller
 {
-    private $apiVersion = 'v18.0';
     private $accessToken;
+    private $apiVersion = 'v18.0';
 
     public function __construct()
     {
         $this->accessToken = config('services.instagram.access_token');
     }
 
-    public function publishPost(Request $request)
+    public function publishPost(Request $request): \Illuminate\Http\JsonResponse
     {
         $request->validate([
             'image_url' => 'required|url',
@@ -55,7 +52,7 @@ class InstagramController extends Controller
         }
     }
 
-    public function readMessages(): \Illuminate\Http\JsonResponse
+    public function readMessages()
     {
         $endpoint = "https://graph.facebook.com/{$this->apiVersion}/me/conversations";
 
@@ -72,26 +69,60 @@ class InstagramController extends Controller
         }
     }
 
-    public function sendMessage(Request $request)
+    public function handleWebhook(Request $request): \Illuminate\Http\JsonResponse
     {
-        $request->validate([
-            'recipient_id' => 'required|string',
-            'message' => 'required|string',
-        ]);
+        $payload = $request->all();
+        Log::info('Received webhook payload', $payload);
 
-        $endpoint = "https://graph.facebook.com/{$this->apiVersion}/me/messages";
+        if ($payload['object'] === 'instagram') {
+            foreach ($payload['entry'] as $entry) {
+                $this->processEntry($entry);
+            }
+        }
 
-        $response = Http::post($endpoint, [
-            'recipient' => ['id' => $request->recipient_id],
-            'message' => ['text' => $request->message],
+        return response()->json(['status' => 'OK']);
+    }
+
+    protected function processEntry($entry)
+    {
+        if (isset($entry['messaging'])) {
+            foreach ($entry['messaging'] as $messagingEvent) {
+                if (isset($messagingEvent['message'])) {
+                    $senderId = $messagingEvent['sender']['id'];
+                    $message = $messagingEvent['message']['text'];
+                    $messageId = $messagingEvent['message']['mid'];
+
+                    $this->handleIncomingMessage($senderId, $message, $messageId);
+                }
+            }
+        }
+    }
+
+    protected function handleIncomingMessage($senderId, $message, $messageId)
+    {
+        Log::info("Received message from {$senderId}: {$message}");
+
+        // Here you can add logic to process the message
+        // For example, you might want to save it to your database
+
+        // For now, let's just send a simple reply
+        $this->sendReply($senderId, "Thanks for your message: {$message}");
+    }
+
+    public function sendReply($recipientId, $message)
+    {
+        $url = "https://graph.facebook.com/{$this->apiVersion}/me/messages";
+
+        $response = Http::post($url, [
+            'recipient' => ['id' => $recipientId],
+            'message' => ['text' => $message],
             'access_token' => $this->accessToken,
         ]);
 
         if ($response->successful()) {
-            return response()->json(['message' => 'Message sent successfully']);
+            Log::info("Reply sent successfully to {$recipientId}");
         } else {
-            Log::error('Failed to send message: ' . $response->body());
-            return response()->json(['error' => 'Failed to send message'], 500);
+            Log::error("Failed to send reply to {$recipientId}: " . $response->body());
         }
     }
 }

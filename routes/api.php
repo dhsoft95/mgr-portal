@@ -22,9 +22,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::post('/send-message', [FacebookMessageController::class, 'sendMessage']);
 
+
+
 Route::post('/instagram/publish', [InstagramController::class, 'publishPost']);
 Route::get('/instagram/messages', [InstagramController::class, 'readMessages']);
-Route::post('/instagram/send-message', [InstagramController::class, 'sendMessage']);
+Route::post('/instagram/webhook', [InstagramController::class, 'handleWebhook']);
+Route::post('/instagram/send-reply', [InstagramController::class, 'sendReply']);
 
 // Instagram Webhook route
 Route::match(['get', 'post'], '/instagram/webhook', [InstagramWebhookController::class, 'handleWebhook']);
