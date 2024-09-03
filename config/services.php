@@ -37,6 +37,7 @@ return [
         'redirect_uri' => env('INSTAGRAM_REDIRECT_URI'),
         'webhook_verify_token' => env('INSTAGRAM_WEBHOOK_VERIFY_TOKEN'),
         'access_token' => env('INSTAGRAM_ACCESS_TOKEN'),
+        'account_id' => env('INSTAGRAM_ACCOUNT_ID'),
     ],
 
 
